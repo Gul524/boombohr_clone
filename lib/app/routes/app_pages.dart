@@ -1,10 +1,12 @@
+import 'package:demo_app/app/modules/home/home_page.dart';
 import 'package:get/get.dart';
-import '../modules/forms/views/forms_view.dart';
+
 part 'app_routes.dart';
 
 class AppPages {
-  static const initial = Routes.forms;
+  static final initial = HomeScreen.routeName;
+
   static final routes = <GetPage>[
-    GetPage(name: Routes.forms, page: () => const FormsView()),
+    GetPage(name: HomeScreen.routeName, page: () => const HomeScreen()),
   ];
 }
