@@ -1,5 +1,9 @@
 import 'package:demo_app/app/data/models/models.dart';
 import 'package:demo_app/app/modules/home/customize_menu.dart';
+import 'package:demo_app/app/modules/home/tabWidgetController.dart';
+import 'package:demo_app/app/modules/sections/form.dart';
+import 'package:demo_app/app/modules/sections/list_section.dart';
+import 'package:demo_app/app/modules/sections/table_section.dart';
 
 import 'package:flutter/material.dart' hide Table;
 import 'package:get/get.dart';
@@ -59,13 +63,3 @@ class TabWidget extends StatelessWidget {
   }
 }
 
-extension on TableSection {
-  /// Helper to get the controller in a stateless child
-  static TabControllerX? _findController(BuildContext context) {
-    try {
-      return context.findAncestorWidgetOfExactType<GetBuilder<TabControllerX>>()?.init;
-    } catch (_) {
-      return null;
-    }
-  }
-}

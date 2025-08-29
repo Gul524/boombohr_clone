@@ -1,6 +1,4 @@
-import 'package:demo_app/models/models.dart';
-import 'package:demo_app/repositories/repository.dart';
-import 'package:demo_app/models/static_tabs.dart' hide TabModel;
+import 'package:demo_app/app/data/repositories/repository.dart';
 import 'package:get/get.dart';
 
 class ProfileController extends GetxController {

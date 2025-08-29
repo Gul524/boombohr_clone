@@ -1,8 +1,8 @@
-import 'package:demo_app/models/models.dart';
+import 'package:demo_app/app/data/models/models.dart';
+import 'package:demo_app/app/modules/home/tabWidget.dart';
 import 'package:demo_app/app/modules/home/app_bar_widget.dart';
 import 'package:demo_app/app/modules/home/drawer_widget.dart';
 import 'package:demo_app/app/modules/home/home_controller.dart';
-import 'package:demo_app/app/modules/tabWidgets/tabWidget.dart';
 import 'package:demo_app/app/modules/home/tab_controller.dart';
 import 'package:demo_app/app/modules/home/tab_mangement_controller.dart';
 // import 'package:demo_app/app/theme/app_theme.dart';

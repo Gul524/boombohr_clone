@@ -257,7 +257,7 @@ class ReorderPage extends StatelessWidget {
           onPressed: () {
             // Save changes back to controller
             final index = tabController.tabs
-                .indexWhere((t) => t. == editedTab.value.tabName);
+                .indexWhere((t) => t.tabName == editedTab.value.tabName);
             if (index != -1) {
               tabController.tabs[index] = editedTab.value;
               tabController.tabs.refresh();

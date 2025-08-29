@@ -1,5 +1,5 @@
 // training_widgets.dart
-import 'package:demo_app/models/models.dart';
+import 'package:demo_app/app/data/models/models.dart';
 import 'package:flutter/material.dart';
 
 class TrainingListItem extends StatelessWidget {

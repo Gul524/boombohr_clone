@@ -1,8 +1,8 @@
+import 'package:demo_app/app/modules/home/home_page.dart';
 import 'package:demo_app/app/modules/home/tab_controller.dart';
 import 'package:demo_app/app/modules/home/tab_mangement_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'app/routes/app_pages.dart';
 import 'app/services/storage_service.dart';
 import 'app/theme/app_theme.dart';
 
@@ -22,11 +22,9 @@ class BambooFormsApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      home: const HomeScreen(),
       themeMode: StorageService.read('themeMode') == 'dark' ? ThemeMode.dark : ThemeMode.light,
-      initialRoute: AppPages.initial,
-      getPages: AppPages.routes,
       initialBinding: BindingsBuilder(() {
-        Get.put(Repos)
         final tab = Get.put(AppTabController());
         Get.put(TabManagementController(appTabs: tab));
       }),
