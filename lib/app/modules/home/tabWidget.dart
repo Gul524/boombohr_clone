@@ -61,19 +61,5 @@ class TabWidget extends StatelessWidget {
       ),
     );
   }
-<<<<<<< HEAD
-=======
-}
-
-extension on TableSection {
-  /// Helper to get the controller in a stateless child
-  static TabControllerX? _findController(BuildContext context) {
-    try {
-      return context.findAncestorWidgetOfExactType<GetBuilder<TabControllerX>>()?.init;
-    } catch (_) {
-      return null;
-    }
-  }
->>>>>>> e448832f672788ded6c9988df3274e1a9498f85a
 }
 

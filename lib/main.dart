@@ -1,3 +1,4 @@
+import 'package:demo_app/app/data/repositories/service.dart';
 import 'package:demo_app/app/modules/home/home_page.dart';
 import 'package:demo_app/app/modules/home/tab_controller.dart';
 import 'package:demo_app/app/modules/home/tab_mangement_controller.dart';
