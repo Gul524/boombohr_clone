@@ -1,92 +1,27 @@
+// add_table_page.dart
 import 'package:demo_app/app/data/models/models.dart';
-import 'package:demo_app/app/modules/pages/table_controller.dart';
-import 'package:flutter/material.dart';
+import 'package:demo_app/app/modules/home/tab_controller.dart';
+import 'package:flutter/material.dart' hide TabController;
+import 'package:get/get.dart';
 
 class AddTablePage extends StatefulWidget {
-  final TabModel tabModel;
-  final Function(TabModel) onTableAdded;
-
-  const AddTablePage({
-    super.key,
-    required this.tabModel,
-    required this.onTableAdded,
-  });
+  const AddTablePage({super.key, required this.tabName});
+  final String tabName;
 
   @override
+  // ignore: library_private_types_in_public_api
   _AddTablePageState createState() => _AddTablePageState();
 }
 
 class _AddTablePageState extends State<AddTablePage> {
+  final AppTabController tabController = Get.find();
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _tableTitleController = TextEditingController();
-  final TextEditingController _buttonLabelController = TextEditingController();
 
-  final List<TableField> _fields = [];
-  final Map<int, TextEditingController> _fieldLabelControllers = {};
-  final Map<int, TextEditingController> _fieldKeyControllers = {};
-  final Map<int, TextEditingController> _placeholderControllers = {};
-  final Map<int, String> _fieldTypes = {};
-  final Map<int, String> _displayFormats = {};
-  final Map<int, bool> _requiredFields = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _buttonLabelController.text = 'Add Entry';
-    // Add one initial field
-    _addField();
-  }
-
-  @override
-  void dispose() {
-    _tableTitleController.dispose();
-    _buttonLabelController.dispose();
-
-    // Dispose all field controllers
-    for (var controller in _fieldLabelControllers.values) {
-      controller.dispose();
-    }
-    for (var controller in _fieldKeyControllers.values) {
-      controller.dispose();
-    }
-    for (var controller in _placeholderControllers.values) {
-      controller.dispose();
-    }
-
-    super.dispose();
-  }
-
-  void _addField() {
-    setState(() {
-      int newIndex = _fields.length;
-      _fields.add(TableField(index: newIndex));
-      _fieldLabelControllers[newIndex] = TextEditingController();
-      _fieldKeyControllers[newIndex] = TextEditingController();
-      _placeholderControllers[newIndex] = TextEditingController();
-      _fieldTypes[newIndex] = 'Text';
-      _displayFormats[newIndex] = 'Default';
-      _requiredFields[newIndex] = false;
-    });
-  }
-
-  void _removeField(int index) {
-    if (_fields.length <= 1) return; // Don't remove the last field
-
-    setState(() {
-      _fields.removeAt(index);
-      _fieldLabelControllers.remove(index);
-      _fieldKeyControllers.remove(index);
-      _placeholderControllers.remove(index);
-      _fieldTypes.remove(index);
-      _displayFormats.remove(index);
-      _requiredFields.remove(index);
-
-      // Update indices
-      for (int i = 0; i < _fields.length; i++) {
-        _fields[i] = TableField(index: i);
-      }
-    });
-  }
+  final TextEditingController tableNameController = TextEditingController();
+  final TextEditingController dataKeyController = TextEditingController();
+  final TextEditingController addButtonLabelController =
+      TextEditingController(text: 'Add Entry');
+  final RxList<TableColumn> tableColumns = <TableColumn>[].obs;
 
   @override
   Widget build(BuildContext context) {
@@ -94,88 +29,115 @@ class _AddTablePageState extends State<AddTablePage> {
       appBar: AppBar(
         title: const Text('Add Custom Table'),
         leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Get.back(),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTableTitleField(),
-                const SizedBox(height: 24),
-                _buildButtonLabelField(),
-                const SizedBox(height: 24),
-                _buildDivider(),
-                const SizedBox(height: 16),
-                _buildFieldsSection(),
-                const SizedBox(height: 16),
-                _buildAddFieldButton(),
-                const SizedBox(height: 24),
-                _buildActionButtons(),
-              ],
-            ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              _buildTableConfiguration(),
+              const SizedBox(height: 24),
+              _buildAddButtonLabel(),
+              const SizedBox(height: 24),
+              _buildTableFields(),
+              const SizedBox(height: 32),
+              _buildActionButtons(),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTableTitleField() {
-    return TextFormField(
-      controller: _tableTitleController,
-      decoration: const InputDecoration(
-        labelText: 'Table Title',
-        border: OutlineInputBorder(),
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter a table title';
-        }
-        return null;
-      },
+  Widget _buildTableConfiguration() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Table Configuration',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: tableNameController,
+          decoration: const InputDecoration(
+            labelText: 'Table Name',
+            hintText: 'e.g., Employee Skills, Project History',
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Table name is required' : null,
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: dataKeyController,
+          decoration: const InputDecoration(
+            labelText: 'Data Key',
+            hintText: 'e.g., skillsEntries, projectEntries',
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Data key is required' : null,
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Unique identifier for storing table data',
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+      ],
     );
   }
 
-  Widget _buildButtonLabelField() {
-    return TextFormField(
-      controller: _buttonLabelController,
-      decoration: const InputDecoration(
-        labelText: 'Add Button Label',
-        border: OutlineInputBorder(),
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter a button label';
-        }
-        return null;
-      },
+  Widget _buildAddButtonLabel() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Add Button Label',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: addButtonLabelController,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildDivider() {
-    return const Divider(thickness: 1);
-  }
-
-  Widget _buildFieldsSection() {
+  Widget _buildTableFields() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Table Fields',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        ..._fields.map((field) => _buildFieldCard(field.index)).toList(),
+        Obx(() => Column(
+              children: tableColumns
+                  .asMap()
+                  .entries
+                  .map((entry) => _buildTableFieldItem(entry.key, entry.value))
+                  .toList(),
+            )),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(
+          onPressed: _addTableField,
+          icon: const Icon(Icons.add),
+          label: const Text('Add Field'),
+        ),
       ],
     );
   }
 
-  Widget _buildFieldCard(int index) {
+  Widget _buildTableFieldItem(int index, TableColumn column) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -188,78 +150,76 @@ class _AddTablePageState extends State<AddTablePage> {
               children: [
                 Text(
                   'Field ${index + 1}',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                if (_fields.length > 1)
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _removeField(index),
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => tableColumns.removeAt(index),
+                ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             TextFormField(
-              controller: _fieldKeyControllers[index],
-              decoration: const InputDecoration(
-                labelText: 'Field Key *',
-                hintText: 'e.g., skillName, projectTitle',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a field key';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildFieldTypeDropdown(index),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _placeholderControllers[index],
-              decoration: const InputDecoration(
-                labelText: 'Placeholder',
-                hintText: 'Enter placeholder text',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildDivider(),
-            const SizedBox(height: 16),
-            const Text(
-              'Additional Details',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _fieldLabelControllers[index],
+              initialValue: column.name,
               decoration: const InputDecoration(
                 labelText: 'Field Label',
                 hintText: 'e.g., Skill Name, Project Title',
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a field label';
-                }
-                return null;
+              onChanged: (value) {
+                tableColumns[index] =
+                    tableColumns[index].copyWith(columnName: value);
               },
             ),
-            const SizedBox(height: 16),
-            _buildDisplayFormatDropdown(index),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            TextFormField(
+              initialValue: column.columnKey,
+              decoration: const InputDecoration(
+                labelText: 'Field Key',
+                hintText: 'e.g., skillName, projectTitle',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                // tableColumns[index] =
+                //     tableColumns[index].copyWith(columnKey: value);
+              },
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
-                Checkbox(
-                  value: _requiredFields[index] ?? false,
-                  onChanged: (value) {
-                    setState(() {
-                      _requiredFields[index] = value ?? false;
-                    });
-                  },
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: column.dataType,
+                    decoration: const InputDecoration(
+                      labelText: 'Field Type',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'text', child: Text('Text')),
+                      DropdownMenuItem(value: 'number', child: Text('Number')),
+                      DropdownMenuItem(value: 'date', child: Text('Date')),
+                    ],
+                    onChanged: (value) {
+                      tableColumns[index] =
+                          tableColumns[index].copyWith(dataType: value!);
+                    },
+                  ),
                 ),
-                const Text('Required Field'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: 'default',
+                    decoration: const InputDecoration(
+                      labelText: 'Display Format',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'default', child: Text('Default')),
+                    ],
+                    onChanged: (value) {},
+                  ),
+                ),
               ],
             ),
           ],
@@ -268,67 +228,15 @@ class _AddTablePageState extends State<AddTablePage> {
     );
   }
 
-  Widget _buildFieldTypeDropdown(int index) {
-    return DropdownButtonFormField<String>(
-      value: _fieldTypes[index],
-      decoration: const InputDecoration(
-        labelText: 'Field Type',
-        border: OutlineInputBorder(),
-      ),
-      items: const [
-        DropdownMenuItem(value: 'Text', child: Text('Text')),
-        DropdownMenuItem(value: 'Number', child: Text('Number')),
-        DropdownMenuItem(value: 'Date', child: Text('Date')),
-        DropdownMenuItem(value: 'Dropdown', child: Text('Dropdown')),
-      ],
-      onChanged: (value) {
-        setState(() {
-          _fieldTypes[index] = value ?? 'Text';
-        });
-      },
-    );
-  }
-
-  Widget _buildDisplayFormatDropdown(int index) {
-    return DropdownButtonFormField<String>(
-      value: _displayFormats[index],
-      decoration: const InputDecoration(
-        labelText: 'Display Format',
-        border: OutlineInputBorder(),
-      ),
-      items: const [
-        DropdownMenuItem(value: 'Default', child: Text('Default')),
-        DropdownMenuItem(value: 'Short', child: Text('Short')),
-        DropdownMenuItem(value: 'Long', child: Text('Long')),
-      ],
-      onChanged: (value) {
-        setState(() {
-          _displayFormats[index] = value ?? 'Default';
-        });
-      },
-    );
-  }
-
-  Widget _buildAddFieldButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _addField,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Field'),
-      ),
-    );
-  }
-
   Widget _buildActionButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+        OutlinedButton(
+          onPressed: () => Get.back(),
           child: const Text('Cancel'),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         ElevatedButton(
           onPressed: _addTable,
           child: const Text('Add Table'),
@@ -337,50 +245,24 @@ class _AddTablePageState extends State<AddTablePage> {
     );
   }
 
+  void _addTableField() {
+    tableColumns.add(TableColumn(
+      name: '',
+      columnKey: '',
+      dataType: 'text',
+    ));
+  }
+
   void _addTable() {
-    if (_formKey.currentState!.validate()) {
-      // Create column names and field models
-      List<String> columns = [];
-      List<FieldModel> fieldModels = [];
-
-      for (int i = 0; i < _fields.length; i++) {
-        columns.add(_fieldLabelControllers[i]!.text);
-
-        fieldModels.add(FieldModel(
-          label: _fieldLabelControllers[i]!.text,
-          hint: _placeholderControllers[i]!.text,
-          dataType:
-              TableCreationLogic.getFieldDataTypeFromString(_fieldTypes[i]!),
-          isRequired: _requiredFields[i] ?? false,
-        ));
-      }
-
-      // Create the new table
-      final newTable = TableModel(
-        title: _tableTitleController.text,
-        rowLabel: _buttonLabelController.text,
-        columns: columns,
-        rows: [fieldModels], // Add one initial row with the field models
-        isPermanent: false,
+    if (_formKey.currentState!.validate() && tableColumns.isNotEmpty) {
+      tabController.addCustomTable(
+        tabName: widget.tabName,
+        tableName: tableNameController.text,
+        dataKey: dataKeyController.text,
+        columns: tableColumns.toList(),
+        addButtonLabel: addButtonLabelController.text,
       );
-
-      // Add the table to the tab model using the logic class
-      final updatedTabModel = TableCreationLogic.addTableToTab(
-        tabModel: widget.tabModel,
-        table: newTable,
-      );
-
-      // Notify parent about the new table
-      widget.onTableAdded(updatedTabModel);
-
-      // Navigate back
-      Navigator.of(context).pop();
+      Get.back();
     }
   }
-}
-
-class TableField {
-  final int index;
-
-  TableField({required this.index});
 }

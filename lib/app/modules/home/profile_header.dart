@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ProfileHeader extends StatelessWidget {
-  final HomeController controller;
+  final ProfileController controller;
 
   const ProfileHeader({super.key, required this.controller});
 
