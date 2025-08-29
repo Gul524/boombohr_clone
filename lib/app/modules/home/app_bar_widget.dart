@@ -1,8 +1,10 @@
 import 'package:demo_app/app/modules/home/home_controller.dart';
-import 'package:demo_app/app/modules/home/home_page.dart';
 import 'package:demo_app/app/modules/home/profile_header.dart';
+import 'package:demo_app/app/modules/home/tab_controller.dart';
+import 'package:demo_app/app/modules/pages/tab_mangement_page.dart';
 import 'package:demo_app/app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class AppBarWidget extends StatelessWidget {
   const AppBarWidget({
@@ -11,7 +13,7 @@ class AppBarWidget extends StatelessWidget {
     required this.tabs,
   });
 
-  final HomeController controller;
+  final ProfileController controller;
   final List<Tab> tabs;
 
   @override
@@ -65,6 +67,11 @@ class AppBarWidget extends StatelessWidget {
           ],
         ),
         const SizedBox(width: 8),
+        IconButton(
+          icon: const Icon(Icons.settings),
+          onPressed: () => Get.to(() => TabManagementPage()),
+        ),
+        const SizedBox(width: 8),
       ],
       flexibleSpace: FlexibleSpaceBar(
         background: SafeArea(
@@ -79,6 +86,10 @@ class AppBarWidget extends StatelessWidget {
         child: ColoredBox(
           color: Colors.white,
           child: TabBar(
+            onTap: (value) {
+              final AppTabController tabController = Get.find();
+              tabController.ishiddenTabSelected.value = false;
+            },
             isScrollable: true,
             labelColor: AppTheme.primary,
             unselectedLabelColor: Colors.black,

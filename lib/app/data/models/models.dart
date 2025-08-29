@@ -1,391 +1,477 @@
-import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-enum TabType { form, documents, notes }
+enum TabVisibility {
+  visible,
+  hidden,
+}
 
-enum DocumentType { file, folder }
+enum FeildType {
+  text,
+  number,
+  checkbox,
+  radio,
+}
+
+enum SectionType { form, document }
+
+// class AppTab {
+//   final String name;
+//   final Rx<TabVisibility> visibility;
+//   final bool isLocked;
+//   final bool isCustom;
+//   final int order;
+
+//   AppTab({
+//     required this.name,
+//     required this.visibility,
+//     this.isLocked = false,
+//     this.isCustom = false,
+//     required this.order,
+//   });
+
+//   AppTab copyWith({
+//     String? name,
+//     TabVisibility? visibility,
+//     bool? isLocked,
+//     bool? isCustom,
+//     int? order,
+//   }) {
+//     return AppTab(
+//       name: name ?? this.name,
+//       visibility: visibility != null ? Rx(visibility) : this.visibility,
+//       isLocked: isLocked ?? this.isLocked,
+//       isCustom: isCustom ?? this.isCustom,
+//       order: order ?? this.order,
+//     );
+//   }
+// }
 
 class TabModel {
-  String title;
-  int order;
-  bool isPermanent;
-  TabType tabType;
-  IconData icon; // Added IconData for tabs
-
-  // Nullable: only one will be filled depending on tabType
-  List<SectionModel>? sections; // for form tabs
-  List<DocumentItem>? documents; // for document tabs
-  List<NoteModel>? notes; // for notes tabs
+  final String tabName;
+  final RxList<Section> sections;
+  final bool isEditable;
+  final bool allowCustomFields;
+  final bool allowCustomTables;
+  final Rx<TabVisibility> visibility;
+  final bool isLocked;
+  final bool isCustom;
+  final int order;
 
   TabModel({
-    required this.title,
+    required this.tabName,
+    required List<Section> sections,
+    this.isEditable = true,
+    this.allowCustomFields = true,
+    this.allowCustomTables = true,
+    required this.visibility,
+    this.isLocked = false,
+    this.isCustom = false,
     required this.order,
-    this.isPermanent = false,
-    required this.tabType,
-    required this.icon, // Added required icon parameter
-    this.sections,
-    this.documents,
-    this.notes,
-  });
+  }) : sections = sections.obs;
 
-  factory TabModel.fromJson(Map<String, dynamic> json) {
+  TabModel copyWith({
+    String? tabName,
+    List<Section>? sections,
+    Map<String, dynamic>? customLayout,
+    bool? isEditable,
+    bool? allowCustomFields,
+    bool? allowCustomTables,
+    int? order,
+    Rx<TabVisibility>? visibility,
+  }) {
     return TabModel(
-      title: json['title'] ?? '',
-      order: json['order'] ?? 0,
-      isPermanent: json['isPermanent'] ?? false,
-      tabType: TabType.values.firstWhere(
-        (e) => e.toString().split('.').last == (json['tabType'] ?? 'form'),
-        orElse: () => TabType.form,
-      ),
-      icon: _parseIconFromJson(json['icon']), // Parse icon from JSON
-      sections: (json['sections'] as List<dynamic>?)
-          ?.map((e) => SectionModel.fromJson(e))
-          .toList(),
-      documents: (json['documents'] as List<dynamic>?)
-          ?.map((e) => DocumentItem.fromJson(e))
-          .toList(),
-      notes: (json['notes'] as List<dynamic>?)
-          ?.map((e) => NoteModel.fromJson(e))
-          .toList(),
+      tabName: tabName ?? this.tabName,
+      sections: sections ?? this.sections,
+      isEditable: isEditable ?? this.isEditable,
+      allowCustomFields: allowCustomFields ?? this.allowCustomFields,
+      allowCustomTables: allowCustomTables ?? this.allowCustomTables,
+      visibility: visibility ?? this.visibility,
+      order: order ?? 0,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'order': order,
-      'isPermanent': isPermanent,
-      'tabType': tabType.toString().split('.').last,
-      'icon': _iconToJson(icon), // Convert icon to JSON
-      if (sections != null)
-        'sections': sections!.map((e) => e.toJson()).toList(),
-      if (documents != null)
-        'documents': documents!.map((e) => e.toJson()).toList(),
-      if (notes != null) 'notes': notes!.map((e) => e.toJson()).toList(),
-    };
-  }
-
-  // Helper method to parse icon from JSON (you might want to customize this)
-  static IconData _parseIconFromJson(dynamic iconJson) {
-    if (iconJson is String) {
-      // You can map string names to actual icons
-      switch (iconJson) {
-        case 'person':
-          return Icons.person;
-        case 'work':
-          return Icons.work;
-        case 'school':
-          return Icons.school;
-        case 'event':
-          return Icons.event;
-        case 'folder':
-          return Icons.folder;
-        case 'description':
-          return Icons.description;
-        case 'health_and_safety':
-          return Icons.health_and_safety;
-        case 'devices':
-          return Icons.devices;
-        case 'emergency':
-          return Icons.emergency;
-        case 'medical_services':
-          return Icons.medical_services;
-        case 'checklist':
-          return Icons.checklist;
-        case 'note':
-          return Icons.note;
-        default:
-          return Icons.category;
-      }
-    }
-    return Icons.category; // Default icon
-  }
-
-  // Helper method to convert icon to JSON (you might want to customize this)
-  static String _iconToJson(IconData icon) {
-    // Convert icon to string representation
-    if (icon == Icons.person) return 'person';
-    if (icon == Icons.work) return 'work';
-    if (icon == Icons.school) return 'school';
-    if (icon == Icons.event) return 'event';
-    if (icon == Icons.folder) return 'folder';
-    if (icon == Icons.description) return 'description';
-    if (icon == Icons.health_and_safety) return 'health_and_safety';
-    if (icon == Icons.devices) return 'devices';
-    if (icon == Icons.emergency) return 'emergency';
-    if (icon == Icons.medical_services) return 'medical_services';
-    if (icon == Icons.checklist) return 'checklist';
-    if (icon == Icons.note) return 'note';
-    return 'category';
   }
 }
 
-class SectionModel {
-  String title;
-  int order;
-  bool isPermanent;
-  IconData icon; // Added IconData for sections
-  List<SubsectionModel>? subSections; // recursive
-  List<FieldModel>? fields;
-  List<TableModel>? tables;
+class Section {
+  final String sectionName;
+  final String
+      sectionType; // 'form', 'list', 'table', 'mixed', 'repeatable', 'notes', 'info'
+  final RxList<Field> fields;
+  final TableModel? table;
+  final RxList<dynamic> items;
+  final bool isEditable;
+  final bool hasCustomLayout;
+  final bool isCustomSection;
+  final RxList<SubSection> subSections;
+  final bool isRepeatable; // New property
+  final RxList<dynamic>
+      repeatedSections; // New property for repeatable sections
 
-  SectionModel({
-    required this.title,
-    required this.order,
-    this.isPermanent = false,
-    required this.icon, // Added required icon parameter
-    this.subSections,
-    this.fields,
-    this.tables,
+  Section({
+    required this.sectionName,
+    required this.sectionType,
+    List<Field> fields = const [],
+    this.table,
+    List<dynamic> items = const [],
+    this.isEditable = true,
+    this.hasCustomLayout = false,
+    this.isCustomSection = false,
+    List<SubSection> subSections = const [],
+    this.isRepeatable = false,
+    List<dynamic> repeatedSections = const [],
+  })  : fields = fields.obs,
+        items = items.obs,
+        subSections = subSections.obs,
+        repeatedSections = repeatedSections.obs;
+
+  Section copyWith({
+    String? sectionName,
+    String? sectionType,
+    List<Field>? fields,
+    TableModel? table,
+    List<dynamic>? items,
+    bool? isEditable,
+    bool? hasCustomLayout,
+    bool? isCustomSection,
+    List<SubSection>? subSections,
+    bool? isRepeatable,
+    List<dynamic>? repeatedSections,
+  }) {
+    return Section(
+      sectionName: sectionName ?? this.sectionName,
+      sectionType: sectionType ?? this.sectionType,
+      fields: fields ?? this.fields.toList(),
+      table: table ?? this.table,
+      items: items ?? this.items.toList(),
+      isEditable: isEditable ?? this.isEditable,
+      hasCustomLayout: hasCustomLayout ?? this.hasCustomLayout,
+      isCustomSection: isCustomSection ?? this.isCustomSection,
+      subSections: subSections ?? this.subSections.toList(),
+      isRepeatable: isRepeatable ?? this.isRepeatable,
+      repeatedSections: repeatedSections ?? this.repeatedSections.toList(),
+    );
+  }
+}
+
+class TableModel {
+  final String feildEntryButton;
+  final List<TableColumn> columns;
+  final List<Map<String, dynamic>> rows;
+  final bool isEditable;
+  final bool isCustomTable;
+
+  TableModel({
+    required this.feildEntryButton,
+    required this.columns,
+    required this.rows,
+    this.isEditable = true,
+    this.isCustomTable = false,
   });
 
-  factory SectionModel.fromJson(Map<String, dynamic> json) {
-    return SectionModel(
-      title: json['title'] ?? '',
-      order: json['order'] ?? 0,
-      isPermanent: json['isPermanent'] ?? false,
-      icon: TabModel._parseIconFromJson(json['icon']), // Use same icon parsing
-      subSections: (json['subSections'] as List<dynamic>?)
-          ?.map((e) => SubsectionModel.fromJson(e))
-          .toList(),
-      fields: (json['fields'] as List<dynamic>?)
-          ?.map((e) => FieldModel.fromJson(e))
-          .toList(),
-      tables: (json['tables'] as List<dynamic>?)
-          ?.map((e) => TableModel.fromJson(e))
-          .toList(),
+  TableModel copyWith({
+    String? name,
+    String? feildEntryButton,
+    List<TableColumn>? columns,
+    List<Map<String, dynamic>>? rows,
+    bool? isEditable,
+    bool? isCustomTable,
+  }) {
+    return TableModel(
+      feildEntryButton: feildEntryButton ?? this.feildEntryButton,
+      columns: columns ?? this.columns,
+      rows: rows ?? this.rows,
+      isEditable: isEditable ?? this.isEditable,
+      isCustomTable: isCustomTable ?? this.isCustomTable,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'order': order,
-      'isPermanent': isPermanent,
-      'icon': TabModel._iconToJson(icon), // Use same icon conversion
-      if (subSections != null)
-        'subSections': subSections!.map((e) => e.toJson()).toList(),
-      if (fields != null) 'fields': fields!.map((e) => e.toJson()).toList(),
-      if (tables != null) 'tables': tables!.map((e) => e.toJson()).toList(),
-    };
   }
 }
 
-class SubsectionModel {
-  String title;
-  int order;
-  bool isPermanent;
-  List<FieldModel>? fields;
-  List<TableModel>? tables;
+class SubSection {
+  final String name;
+  final List<Field> fields;
+  final bool isCustom;
+  final bool isRepeatable;
+  final String? buttonNameToRepeat;
 
-  SubsectionModel({
-    required this.title,
-    required this.order,
-    this.isPermanent = false,
-    this.fields,
-    this.tables,
-  });
-
-  factory SubsectionModel.fromJson(Map<String, dynamic> json) {
-    return SubsectionModel(
-      title: json['title'] ?? '',
-      order: json['order'] ?? 0,
-      isPermanent: json['isPermanent'] ?? false,
-      fields: (json['fields'] as List<dynamic>?)
-          ?.map((e) => FieldModel.fromJson(e))
-          .toList(),
-      tables: (json['tables'] as List<dynamic>?)
-          ?.map((e) => TableModel.fromJson(e))
-          .toList(),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'order': order,
-      'isPermanent': isPermanent,
-      if (fields != null) 'fields': fields!.map((e) => e.toJson()).toList(),
-      if (tables != null) 'tables': tables!.map((e) => e.toJson()).toList(),
-    };
-  }
-}
-
-class NoteModel {
-  String text;
-  DateTime dateTime;
-  bool isPermanent;
-
-  NoteModel({
-    required this.text,
-    required this.dateTime,
-    this.isPermanent = false,
-  });
-
-  factory NoteModel.fromJson(Map<String, dynamic> json) {
-    return NoteModel(
-      text: json['text'] ?? '',
-      dateTime: DateTime.tryParse(json['dateTime'] ?? '') ?? DateTime.now(),
-      isPermanent: json['isPermanent'] ?? false,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'text': text,
-      'dateTime': dateTime.toIso8601String(),
-      'isPermanent': isPermanent,
-    };
-  }
-}
-
-class DocumentItem {
-  String name;
-  DocumentType type;
-  bool isPermanent;
-  String? fileUrl; // only for files
-  List<DocumentItem>? children; // only for folders
-
-  DocumentItem({
+  SubSection({
     required this.name,
-    required this.type,
-    this.isPermanent = false,
-    this.fileUrl,
-    this.children,
-  });
+    required List<Field> fields,
+    this.isCustom = false,
+    this.isRepeatable = false,
+    this.buttonNameToRepeat,
+  }) : fields = fields.obs;
 
-  factory DocumentItem.fromJson(Map<String, dynamic> json) {
-    return DocumentItem(
-      name: json['name'] ?? '',
-      type: DocumentType.values.firstWhere(
-        (e) => e.toString().split('.').last == (json['type'] ?? 'file'),
-        orElse: () => DocumentType.file,
-      ),
-      isPermanent: json['isPermanent'] ?? false,
-      fileUrl: json['fileUrl'],
-      children: (json['children'] as List<dynamic>?)
-          ?.map((e) => DocumentItem.fromJson(e))
-          .toList(),
+  SubSection copyWith({
+    String? name,
+    List<Field>? fields,
+    bool? isCustom,
+    bool? isRepeatable,
+    String? secondField,
+  }) {
+    return SubSection(
+      name: name ?? this.name,
+      fields: fields ?? this.fields.toList(),
+      isCustom: isCustom ?? this.isCustom,
+      isRepeatable: isRepeatable ?? this.isRepeatable,
+      buttonNameToRepeat: secondField ?? this.buttonNameToRepeat,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'type': type.toString().split('.').last,
-      'isPermanent': isPermanent,
-      if (fileUrl != null) 'fileUrl': fileUrl,
-      if (children != null)
-        'children': children!.map((e) => e.toJson()).toList(),
+      'fields': fields.map((field) => field.toJson()).toList(),
+      'isCustom': isCustom,
+      'isRepeatable': isRepeatable,
+      'secondField': buttonNameToRepeat,
     };
+  }
+
+  factory SubSection.fromJson(Map<String, dynamic> json) {
+    return SubSection(
+      name: json['name'],
+      fields: (json['fields'] as List)
+          .map((field) => Field.fromJson(field))
+          .toList(),
+      isCustom: json['isCustom'],
+      isRepeatable: json['isRepeatable'] ?? false,
+      buttonNameToRepeat: json['secondField'],
+    );
   }
 }
 
-enum FieldDataType {
-  text,
-  number,
-  date,
-  dropdown,
-  checkbox,
-  radio,
-  file,
-}
+class Field {
+  final String fieldName;
+  final String fieldKey;
+  final String fieldType;
+  final dynamic value;
+  final bool isRequired;
+  final bool isEditable;
+  final List<String>? options;
+  final String? placeholder;
+  final String? validationRegex;
+  final DateTime? dueDate;
+  final bool isOverdue;
 
-class FieldModel {
-  String label;
-  String hint;
-  FieldDataType dataType;
-  dynamic value;
-  Map<String, dynamic>? validations;
-  List<String>? options; // for dropdown, radio, checkbox
-  bool allowMultiple;
-  bool isPermanent;
-  bool isRequired;
-
-  FieldModel({
-    required this.label,
-    required this.hint,
-    required this.dataType,
+  Field({
+    required this.fieldName,
+    required this.fieldKey,
+    required this.fieldType,
     this.value,
-    this.validations,
-    this.options,
-    this.allowMultiple = false,
-    this.isPermanent = false,
     this.isRequired = false,
+    this.isEditable = true,
+    this.options,
+    this.placeholder,
+    this.validationRegex,
+    this.dueDate,
+    this.isOverdue = false,
   });
 
-  factory FieldModel.fromJson(Map<String, dynamic> json) {
-    return FieldModel(
-        label: json['label'] ?? '',
-        hint: json['hint'] ?? '',
-        dataType: FieldDataType.values.firstWhere(
-          (e) => e.toString().split('.').last == (json['dataType'] ?? 'text'),
-          orElse: () => FieldDataType.text,
-        ),
-        value: json['value'],
-        validations: json['validations'] != null
-            ? Map<String, dynamic>.from(json['validations'])
-            : null,
-        options: (json['options'] as List<dynamic>?)
-            ?.map((e) => e.toString())
-            .toList(),
-        allowMultiple: json['allowMultiple'] ?? false,
-        isPermanent: json['isPermanent'] ?? false,
-        isRequired: json["isRequired"] ?? false);
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'label': label,
-      'hint': hint,
-      'dataType': dataType.toString().split('.').last,
-      'value': value,
-      if (validations != null) 'validations': validations,
-      if (options != null) 'options': options,
-      'allowMultiple': allowMultiple,
-      'isPermanent': isPermanent,
-      'isRequired': isRequired
-    };
-  }
-}
-
-class TableModel {
-  String title;
-  String rowLabel; // text shown on "Add new row" button
-  List<String> columns;
-  List<List<FieldModel>> rows;
-  bool isPermanent;
-
-  TableModel({
-    required this.title,
-    required this.rowLabel,
-    required this.columns,
-    this.rows = const [],
-    this.isPermanent = false,
-  });
-
-  factory TableModel.fromJson(Map<String, dynamic> json) {
-    return TableModel(
-      title: json['title'] ?? '',
-      rowLabel: json['rowLabel'] ?? 'Add Row',
-      columns: (json['columns'] as List<dynamic>? ?? [])
-          .map((e) => e.toString())
-          .toList(),
-      rows: (json['rows'] as List<dynamic>? ?? [])
-          .map((row) => (row as List<dynamic>)
-              .map((e) => FieldModel.fromJson(e))
-              .toList())
-          .toList(),
-      isPermanent: json['isPermanent'] ?? false,
+  Field copyWith({
+    String? fieldName,
+    String? fieldKey,
+    String? fieldType,
+    dynamic value,
+    bool? isRequired,
+    bool? isEditable,
+    List<String>? options,
+    String? placeholder,
+    String? validationRegex,
+    DateTime? dueDate,
+    bool? isOverdue,
+  }) {
+    return Field(
+      fieldName: fieldName ?? this.fieldName,
+      fieldKey: fieldKey ?? this.fieldKey,
+      fieldType: fieldType ?? this.fieldType,
+      value: value ?? this.value,
+      isRequired: isRequired ?? this.isRequired,
+      isEditable: isEditable ?? this.isEditable,
+      options: options ?? this.options,
+      placeholder: placeholder ?? this.placeholder,
+      validationRegex: validationRegex ?? this.validationRegex,
+      dueDate: dueDate ?? this.dueDate,
+      isOverdue: isOverdue ?? this.isOverdue,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'title': title,
-      'rowLabel': rowLabel,
-      'columns': columns,
-      'rows': rows.map((row) => row.map((e) => e.toJson()).toList()).toList(),
-      'isPermanent': isPermanent,
+      'fieldName': fieldName,
+      'fieldKey': fieldKey,
+      'fieldType': fieldType,
+      'value': value,
+      'isRequired': isRequired,
+      'isEditable': isEditable,
+      'options': options,
+      'placeholder': placeholder,
+      'validationRegex': validationRegex,
+      'dueDate': dueDate?.toIso8601String(),
+      'isOverdue': isOverdue,
     };
   }
+
+  factory Field.fromJson(Map<String, dynamic> json) {
+    return Field(
+      fieldName: json['fieldName'],
+      fieldKey: json['fieldKey'],
+      fieldType: json['fieldType'],
+      value: json['value'],
+      isRequired: json['isRequired'],
+      isEditable: json['isEditable'],
+      options:
+          json['options'] != null ? List<String>.from(json['options']) : null,
+      placeholder: json['placeholder'],
+      validationRegex: json['validationRegex'],
+      dueDate: json['dueDate'] != null ? DateTime.parse(json['dueDate']) : null,
+      isOverdue: json['isOverdue'],
+    );
+  }
+}
+
+class TableColumn {
+  final String name;
+  final String columnKey;
+  final String dataType;
+  final bool isHighlighted;
+  final bool isEditable;
+
+  TableColumn({
+    required this.name,
+    required this.columnKey,
+    required this.dataType,
+    this.isHighlighted = false,
+    this.isEditable = true,
+  });
+
+  TableColumn copyWith({
+    String? columnName,
+    String? columnKey,
+    String? dataType,
+    bool? isSortable,
+    bool? isEditable,
+  }) {
+    return TableColumn(
+      name: columnName ?? this.name,
+      columnKey: columnKey ?? this.columnKey,
+      dataType: dataType ?? this.dataType,
+      isHighlighted: isSortable ?? this.isHighlighted,
+      isEditable: isEditable ?? this.isEditable,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'columnName': name,
+      'columnKey': columnKey,
+      'dataType': dataType,
+      'isSortable': isHighlighted,
+      'isEditable': isEditable,
+    };
+  }
+
+  factory TableColumn.fromJson(Map<String, dynamic> json) {
+    return TableColumn(
+      name: json['columnName'],
+      columnKey: json['columnKey'],
+      dataType: json['dataType'],
+      isHighlighted: json['isSortable'],
+      isEditable: json['isEditable'],
+    );
+  }
+}
+
+class TrainingItem {
+  final String trainingName;
+  final DateTime? dueDate;
+  final bool isCompleted;
+  final bool isOverdue;
+  final String category;
+
+  TrainingItem({
+    required this.trainingName,
+    this.dueDate,
+    this.isCompleted = false,
+    this.isOverdue = false,
+    required this.category,
+  });
+}
+
+class DocumentItem {
+  final String documentName;
+  final String documentType;
+  final DateTime uploadDate;
+  final String filePath;
+  final int itemCount;
+
+  DocumentItem({
+    required this.documentName,
+    required this.documentType,
+    required this.uploadDate,
+    required this.filePath,
+    this.itemCount = 0,
+  });
+}
+
+class BenefitItem {
+  final String benefitType;
+  final String planName;
+  final String eligibilityStatus;
+  final bool isEligible;
+
+  BenefitItem({
+    required this.benefitType,
+    required this.planName,
+    required this.eligibilityStatus,
+    required this.isEligible,
+  });
+}
+
+class AssetItem {
+  final String assetCategory;
+  final String assetDescription;
+  final String serialNumber;
+  final DateTime assignedDate;
+  final DateTime? returnDate;
+  final String status;
+
+  AssetItem({
+    required this.assetCategory,
+    required this.assetDescription,
+    required this.serialNumber,
+    required this.assignedDate,
+    this.returnDate,
+    required this.status,
+  });
+}
+
+class EducationItem {
+  final String institution;
+  final String major;
+  final String degree;
+  final double gpa;
+  final DateTime startDate;
+  final DateTime? endDate;
+  final bool isCurrentlyStudying;
+
+  EducationItem({
+    required this.institution,
+    required this.major,
+    required this.degree,
+    required this.gpa,
+    required this.startDate,
+    this.endDate,
+    this.isCurrentlyStudying = false,
+  });
+}
+
+class NoteItem {
+  final String author;
+  final String content;
+  final DateTime timestamp;
+
+  NoteItem({
+    required this.author,
+    required this.content,
+    required this.timestamp,
+  });
 }

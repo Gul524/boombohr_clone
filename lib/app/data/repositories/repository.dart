@@ -1,10 +1,9 @@
-import 'package:demo_app/app/data/models/models.dart';
-import 'package:demo_app/app/services/storage_service.dart';
+import 'package:demo_app/models/models.dart';
 
 
-class Repository {
+class Repository extends GetStorage {
   Future<void> setTabs(List<TabModel> tabs) async {
-    await StorageService.write("tabs", tabs);
+    await GetStorage.write("tabs", tabs);
   }
 
   List<TabModel> getForms() {
